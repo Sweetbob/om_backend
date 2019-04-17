@@ -15,6 +15,8 @@ urlpatterns = [
 
     path('client_num/', client_views.client_extra_num),
 
+    path('client_detail/', client_views.client_detail),
+
     # path('ping/', client_views.ping),
 
 

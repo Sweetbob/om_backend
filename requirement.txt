@@ -1,1 +1,5 @@
-python-nmap
+rest_framework
+pymysql
+ django-cors-headers
+ "
+ ''

@@ -31,7 +31,7 @@ class ClientStaticView(APIView):
             if is_alive(item.get("ip")):
                 item['status'] = '运行中...'
             else:
-                item['status'] = '非运行状态'
+                item['status'] = '停止'
         result['data'] = client_data.data
         return Response(data=result)
 
@@ -97,6 +97,28 @@ def client_extra_num(request):
         result['code'] = '1001'
         result['error'] = 'some unknown error!'
         return Response(data=result)
+
+
+@api_view(('GET',))
+def client_detail(request):
+    """
+    获取主机detail
+    """
+    result = {"code": "1000"}
+    # 验证登陆情况
+    if not check_login(token=request.query_params.get('token')):
+        result = {
+            "code": "1001",
+            'error': 'not valid token!'
+        }
+        return Response(data=result)
+
+    # 返回detail
+    ip = request.query_params.get('ip')
+    client = Client.objects.all().filter(ip=ip).first()
+    result['data'] = ClientSerializer(instance=client, many=False).data
+    return Response(data=result)
+
 
 
 # @api_view(('GET',))
