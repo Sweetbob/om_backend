@@ -1,6 +1,6 @@
 from django import forms
 
-from . import models
+from api import models
 
 
 class ClientForm(forms.ModelForm):
@@ -11,3 +11,4 @@ class ClientForm(forms.ModelForm):
     class Meta:
         model = models.Client
         fields = "__all__"
+

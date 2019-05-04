@@ -1,11 +1,15 @@
+import os
+import time
+
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from api.models import User, Room, Cabinet
 from api.utils.auth_util import check_login
 from api.utils.network_util import is_alive
 from client_api.forms import ClientForm
-from client_api.models import Client
+from api.models import Client
 from client_api.serializers import ClientSerializer
 
 
@@ -28,10 +32,7 @@ class ClientStaticView(APIView):
         client_list = Client.objects.all()
         client_data = ClientSerializer(instance=client_list, many=True)
         for item in client_data.data:
-            if is_alive(item.get("ip")):
-                item['status'] = '运行中...'
-            else:
-                item['status'] = '停止'
+            item['status'] = '检测中...'
         result['data'] = client_data.data
         return Response(data=result)
 
@@ -80,6 +81,7 @@ def client_extra_num(request):
     获取主机数
     """
     result = {"code": "1000"}
+    print('Laile ')
     try:
         # 验证登陆情况
         if not check_login(token=request.query_params.get('token')):
@@ -92,6 +94,57 @@ def client_extra_num(request):
         # 返回主机数
         client_num = Client.objects.all().count()
         result['data'] = {"num": client_num}
+        return Response(data=result)
+    except Exception as e:
+        result['code'] = '1001'
+        result['error'] = 'some unknown error!'
+        return Response(data=result)
+
+
+@api_view(('GET',))
+def room_extra_num(request):
+    """
+    获取room数
+    """
+    result = {"code": "1000"}
+    try:
+        # 验证登陆情况
+        if not check_login(token=request.query_params.get('token')):
+            result = {
+                "code": "1001",
+                'error': 'not valid token!'
+            }
+            return Response(data=result)
+
+        # 返回主机数
+        room_num = Room.objects.all().count()
+        result['data'] = {"num": room_num}
+        return Response(data=result)
+    except Exception as e:
+        result['code'] = '1001'
+        result['error'] = 'some unknown error!'
+        return Response(data=result)
+
+
+@api_view(('GET',))
+def cabinet_extra_num(request):
+    """
+    获取cabinet数
+    """
+    result = {"code": "1000"}
+    print('Laile ')
+    try:
+        # 验证登陆情况
+        if not check_login(token=request.query_params.get('token')):
+            result = {
+                "code": "1001",
+                'error': 'not valid token!'
+            }
+            return Response(data=result)
+
+        # 返回主机数
+        cabinet_num = Cabinet.objects.all().count()
+        result['data'] = {"num": cabinet_num}
         return Response(data=result)
     except Exception as e:
         result['code'] = '1001'
@@ -120,18 +173,81 @@ def client_detail(request):
     return Response(data=result)
 
 
+@api_view(('POST',))
+def change_pw(request):
 
-# @api_view(('GET',))
-# def ping(request):
-#     """
-#     ping 主机
-#     """
-#     ip = request.query_params.get("ip")
-#     result = {"code": "1000"}
-#     nm = nmap.PortScanner()
-#     nm.scan(hosts=ip, arguments='-sn')
-#     # 返回主机数
-#     client_num = Client.objects.all().count()
-#     result['data'] = {"num": client_num}
-#     return Response(data=result)
+    result = {"code": "1000"}
+
+    user = request.data.get("user")
+    old_pw = request.data.get("oldpw")
+    newpw = request.data.get("newpw")
+    print(user)
+    print(old_pw)
+    print(newpw)
+    user = User.objects.filter(username=user, password=old_pw).first()
+    if not user:
+        result['code'] = "1001"
+        result['error'] = "旧密码不对"
+        return Response(data=result)
+    # 返回detail
+    user.password = newpw
+    user.save()
+    return Response(data=result)
+
+
+@api_view(('GET',))
+def client_poweroff(request):
+    """
+    关机
+    """
+    result = {"code": "1000"}
+    # 验证登陆情况
+    if not check_login(token=request.query_params.get('token')):
+        result = {
+            "code": "1001",
+            'error': 'not valid token!'
+        }
+        return Response(data=result)
+    ip = request.query_params.get('ip')
+    print(ip)
+    # 执行关机命令
+    result['data'] = os.system("ssh root@" + ip + " poweroff")
+    time.sleep(10)
+    return Response(data=result)
+
+
+@api_view(('GET',))
+def client_reboot(request):
+    """
+    reboot
+    """
+    result = {"code": "1000"}
+    # 验证登陆情况
+    if not check_login(token=request.query_params.get('token')):
+        result = {
+            "code": "1001",
+            'error': 'not valid token!'
+        }
+        return Response(data=result)
+    ip = request.query_params.get('ip')
+    # 执行reboot命令
+    result['data'] = os.system("ssh root@" + ip + " reboot")
+    time.sleep(30)
+    return Response(data=result)
+
+
+
+@api_view(('GET',))
+def ping(request):
+    """
+    ping 主机
+    """
+    ip = request.query_params.get("ip")
+    result = {"code": "1000"}
+    print('laile' + ip)
+    if is_alive(ip=ip):
+        result['status'] = "运行中"
+    else:
+        result['status'] = "已停止"
+    return Response(data=result)
 

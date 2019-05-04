@@ -5,7 +5,7 @@ from api.forms import CabinetForm
 from api.models import Cabinet
 from api.serializers import CabinetSerializer
 from api.utils.auth_util import check_login
-from client_api.models import Client
+from api.models import Client
 
 
 class CabinetView(APIView):

@@ -5,7 +5,7 @@ from api.forms import RoomForm
 from api.models import Room
 from api.serializers import RoomSerializer
 from api.utils.auth_util import check_login
-from client_api.models import Client
+from api.models import Client
 
 
 class RoomView(APIView):

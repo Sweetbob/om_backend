@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 
 from client_api.forms import ClientForm
-from client_api.models import Client
+from api.models import Client
 
 
 @csrf_exempt
