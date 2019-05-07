@@ -106,6 +106,7 @@ class ProductLine(models.Model):
     charger = models.ForeignKey(to=Charger, on_delete=models.SET_NULL, null=True, blank=True)
 
 
+
 class Project(models.Model):
     p_name = models.CharField(max_length=32)
     p_desc = models.CharField(max_length=1024, null=True, blank=True)
@@ -169,3 +170,13 @@ class Mission(models.Model):
     content = models.CharField(max_length=1024)
     enabled = models.CharField(max_length=32)
     description = models.CharField(max_length=1024, null=True, blank=True)
+
+
+class Cxfb(models.Model):
+    deploy_type = models.CharField(max_length=32)
+    if_clean = models.CharField(max_length=32, null=True, blank=True, default='0')
+    if_local = models.CharField(max_length=32, null=True, blank=True, default='0')
+    status = models.CharField(max_length=32, null=True, blank=True, default='未部署')
+    shell = models.CharField(max_length=1024, null=True, blank=True, default='')
+    project = models.ForeignKey(to=Project, on_delete=models.SET_NULL, null=True, blank=True)
+    machines = models.ManyToManyField(to=Client)

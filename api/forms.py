@@ -75,6 +75,13 @@ class MissionForm(forms.ModelForm):
         fields = "__all__"
 
 
+class CxfbForm(forms.ModelForm):
+
+    class Meta:
+        model = models.Cxfb
+        fields = "__all__"
+
+
 class CrontabForm(forms.ModelForm):
 
     class Meta:

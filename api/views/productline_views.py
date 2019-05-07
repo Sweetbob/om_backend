@@ -39,7 +39,7 @@ class ProductLineView(APIView):
             return Response(data=result)
         else:
             result['code'] = 1001
-            request['error'] = 'field not valid!'
+            result['error'] = 'field not valid!'
             return Response(data=result)
 
 

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from api.models import Cabinet, Charger, SiteNavi, Collective, ProductLine, Project, AuthCenter, Interval, Crontab
+from api.models import Cabinet, Charger, SiteNavi, Collective, ProductLine, Project, AuthCenter, Interval, Crontab, Cxfb
 
 
 class ChargerModelSerializer(serializers.ModelSerializer):
@@ -155,6 +155,25 @@ class CollectiveModelSerializer(serializers.ModelSerializer):
         model = Collective
         fields = "__all__"
 
+
+class CxfbSerializer(serializers.Serializer):
+    id = serializers.CharField()
+    c_name = serializers.SerializerMethodField()
+    deploy_type = serializers.CharField()
+    status = serializers.CharField()
+    w_type = serializers.SerializerMethodField()
+
+    def get_c_name(self, obj):
+        if obj.project:
+            return obj.project.p_name
+        else:
+            return ""
+
+    def get_w_type(self, obj):
+        if obj.project:
+            return 'SVB' if obj.project.warehouse_type == '1' else 'Git'
+        else:
+            return ""
 
 
 
