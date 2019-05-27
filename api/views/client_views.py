@@ -1,6 +1,8 @@
+import json
 import os
 import time
 
+import pexpect
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -8,6 +10,7 @@ from rest_framework.views import APIView
 from api.models import User, Room, Cabinet
 from api.utils.auth_util import check_login
 from api.utils.network_util import is_alive
+from api.utils.redis_util import redis_client
 from client_api.forms import ClientForm
 from api.models import Client
 from client_api.serializers import ClientSerializer
@@ -251,3 +254,209 @@ def ping(request):
         result['status'] = "已停止"
     return Response(data=result)
 
+@api_view(('GET',))
+def machine_num_by_type(request):
+    """
+    """
+    result = {"code": "1000"}
+    running_machine = 0
+    stopped_machine = 0
+    for c in Client.objects.all():
+        if is_alive(ip=c.ip):
+            running_machine += 1
+        else:
+            stopped_machine += 1
+    result['data'] = {
+        "running_machine": running_machine,
+        "stopped_machine": stopped_machine,
+    }
+    return Response(data=result)
+
+
+
+@api_view(('GET',))
+def current_realtime_info(request):
+    """
+    ger newest realtime info
+    """
+    result = {"code": "1000"}
+    try:
+        # 验证登陆情况
+        if not check_login(token=request.query_params.get('token')):
+            result = {
+                "code": "1001",
+                'error': 'not valid token!'
+            }
+            return Response(data=result)
+        ip = request.query_params.get('ip')
+        newest_data = redis_client.lindex(ip, -1)
+        result['data'] = newest_data
+        return Response(data=result)
+    except Exception as e:
+        result['code'] = '1001'
+        result['error'] = 'some unknown error!'
+        return Response(data=result)
+
+
+@api_view(('GET',))
+def realtime_infos(request):
+    """
+    ger realtime info
+    """
+    result = {"code": "1000"}
+    # try:
+    # 验证登陆情况
+    if not check_login(token=request.query_params.get('token')):
+        result = {
+            "code": "1001",
+            'error': 'not valid token!'
+        }
+        return Response(data=result)
+    ip = request.query_params.get('ip')
+    data = redis_client.lrange(ip, 0, -1)
+    xAxis = []
+    cpu_value = []
+
+    disk_value = []
+    mem_value = []
+    process_value = []
+    for item in data:
+        xAxis.append(json.loads(item).get("time"))
+        cpu_value.append(json.loads(item).get("cpu_1"))
+        mem_value.append(json.loads(item).get("memory_used"))
+        process_value.append(json.loads(item).get("processes"))
+        disk_value.append(str(json.loads(item).get("disk_available")).replace("G", ""))
+    data = {
+        "xAxis": xAxis,
+        "cpu_value": cpu_value,
+        "disk_value": disk_value,
+        "mem_value": mem_value,
+        "process_value": process_value,
+    }
+    result['data'] = data
+    return Response(data=result)
+    # except Exception as e:
+    #     result['code'] = '1001'
+    #     result['error'] = 'some unknown error!'
+    #     return Response(data=result)
+
+
+@api_view(('GET',))
+def client_of_cabinet(request):
+    """
+    获取 cclient_of_cabinet
+    """
+    result = {"code": "1000"}
+    # 验证登陆情况
+    if not check_login(token=request.query_params.get('token')):
+        result = {
+            "code": "1001",
+            'error': 'not valid token!'
+        }
+        return Response(data=result)
+
+    # 返回detail
+    id = request.query_params.get('id')
+    clients = Client.objects.filter(cabinet_id=id).all()
+
+    result['data'] = ClientSerializer(instance=clients, many=True).data
+    return Response(data=result)
+
+
+@api_view(('GET',))
+def firewall_status(request):
+    """
+    ger the status of this ip
+    """
+    result = {"code": "1000", 'data': ""}
+    # try:
+        # 验证登陆情况
+    if not check_login(token=request.query_params.get('token')):
+        result = {
+            "code": "1001",
+            'error': 'not valid token!'
+        }
+        return Response(data=result)
+    ip = request.query_params.get('ip')
+    command = "firewall-cmd --state"
+    ssh = pexpect.spawn('ssh %s@%s "%s"' % ('root', ip, command))
+    if b"not" in ssh.read():
+        status = "关"
+    else:
+        status = "开"
+    result['data'] = {
+        'status': status
+    }
+    return Response(data=result)
+    # except Exception as e:
+    #     result['code'] = '1001'
+    #     result['error'] = 'some unknown error!'
+    #     return Response(data=result)
+
+
+@api_view(('GET',))
+def firewall_changing(request):
+    """
+    ger the status of this ip
+    """
+    result = {"code": "1000", 'data': ""}
+    # try:
+        # 验证登陆情况
+    if not check_login(token=request.query_params.get('token')):
+        result = {
+            "code": "1001",
+            'error': 'not valid token!'
+        }
+        return Response(data=result)
+    ip = request.query_params.get('ip')
+    flag = request.query_params.get('flag')
+    if flag == "0":
+        # stop
+        os.popen('ssh %s@%s "%s"' % ('root', ip, 'systemctl stop firewalld'))
+    else:
+        # start
+        os.popen('ssh %s@%s "%s"' % ('root', ip, 'systemctl start firewalld'))
+    time.sleep(5)
+    command = "firewall-cmd --state"
+    ssh = pexpect.spawn('ssh %s@%s "%s"' % ('root', ip, command))
+    if b"not" in ssh.read():
+        status = "关"
+    else:
+        status = "开"
+    result['data'] = {
+        'status': status
+    }
+    return Response(data=result)
+    # except Exception as e:
+    #     result['code'] = '1001'
+    #     result['error'] = 'some unknown error!'
+    #     return Response(data=result)
+
+
+@api_view(('GET',))
+def host_name_changing(request):
+    """
+    change host_name
+    """
+    result = {"code": "1000", 'data': ""}
+    # try:
+        # 验证登陆情况
+    if not check_login(token=request.query_params.get('token')):
+        result = {
+            "code": "1001",
+            'error': 'not valid token!'
+        }
+        return Response(data=result)
+    ip = request.query_params.get('ip')
+    host_name = request.query_params.get('host_name')
+    os.popen('ssh %s@%s "%s"' % ('root', ip, 'hostname ' + host_name))
+    os.popen('ssh %s@%s "%s"' % ('root', ip, 'echo ' + host_name + ' > /etc/hostname'))
+    client = Client.objects.filter(ip=ip).first()
+    client.host_name = host_name
+    client.save()
+    result['data'] = ClientSerializer(instance=client, many=False).data
+    return Response(data=result)
+    # except Exception as e:
+    #     result['code'] = '1001'
+    #     result['error'] = 'some unknown error!'
+    #     return Response(data=result)

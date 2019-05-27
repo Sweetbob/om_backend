@@ -161,7 +161,24 @@ class CxfbSerializer(serializers.Serializer):
     c_name = serializers.SerializerMethodField()
     deploy_type = serializers.CharField()
     status = serializers.CharField()
+    if_clean = serializers.CharField()
+    if_local = serializers.CharField()
+    shell = serializers.CharField()
     w_type = serializers.SerializerMethodField()
+    p_id = serializers.SerializerMethodField()
+    machines = serializers.SerializerMethodField()
+
+    def get_machines(self, obj):
+        result = []
+        for o in obj.machines.all():
+            result.append({'text': o.host_name, 'value': o.ip})
+        return result
+
+    def get_p_id(self, obj):
+        if obj.project:
+            return str(obj.project.id)
+        else:
+            return ""
 
     def get_c_name(self, obj):
         if obj.project:

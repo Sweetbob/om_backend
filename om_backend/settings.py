@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 """
 
 import os
-import djcelery
+import configparser
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -27,7 +27,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-djcelery.setup_loader()
 
 # Application definition
 
@@ -38,7 +37,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'djcelery',
     'api.apps.ApiConfig',
     'client_api.apps.ClientApiConfig',
 ]
@@ -78,14 +76,22 @@ WSGI_APPLICATION = 'om_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
+conf = configparser.ConfigParser()
+conf.read(BASE_DIR + '/config.ini')  # 读config.ini文件
+
+
+def write_conf():
+    conf.write(open(BASE_DIR + '/config.ini', 'w'))
+
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'om',
-        'USER': 'root',
-        'PASSWORD': '123456',
-        'HOST': '192.168.163.171',
-        'PORT': '3306',
+        'NAME': conf.get('global', 'NAME'),
+        'USER': conf.get('global', 'USER'),
+        'PASSWORD': conf.get('global', 'PASSWORD'),
+        'HOST': conf.get('global', 'HOST'),
+        'PORT': conf.get('global', 'PORT'),
     }
 }
 

@@ -1,3 +1,4 @@
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -99,4 +100,27 @@ class CabinetView(APIView):
         # 删除机房
         Cabinet.objects.filter(pk=request.query_params.get("id")).delete()
         return Response(data=result)
+
+
+@api_view(('GET',))
+def cabinet_of_room(request):
+    """
+    获取 cabinet of the room
+    """
+    result = {"code": "1000"}
+    # 验证登陆情况
+    if not check_login(token=request.query_params.get('token')):
+        result = {
+            "code": "1001",
+            'error': 'not valid token!'
+        }
+        return Response(data=result)
+
+    # 返回detail
+    id = request.query_params.get('id')
+    cabinets = Cabinet.objects.filter(room_id=id).all()
+
+    result['data'] = CabinetSerializer(instance=cabinets, many=True).data
+    return Response(data=result)
+
 

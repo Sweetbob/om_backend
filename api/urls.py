@@ -10,6 +10,14 @@ urlpatterns = [
     path('client/', client_views.ClientStaticView.as_view()),
 
     path('cabinet/', cabinet_views.CabinetView.as_view()),
+    path('cabinet_of_room/', cabinet_views.cabinet_of_room),
+    path('client_of_cabinet/', client_views.client_of_cabinet),
+
+    path('firewall_status/', client_views.firewall_status),
+    path('host_name_changing/', client_views.host_name_changing),
+    path('firewall_changing/', client_views.firewall_changing),
+
+
     path('collective/', collective_views.CollectiveView.as_view()),
 
     path('authcenter/', authcenter_views.AuthCenterView.as_view()),
@@ -30,6 +38,12 @@ urlpatterns = [
     path('get_playbook/', mission_view.get_playbook),
     path('cxfb/', cxfb_view.CxfbView.as_view()),
     path('clean_cxfb/', cxfb_view.clean_cxfb),
+    path('deploy/', cxfb_view.deploy),
+    path('deploy_log/', cxfb_view.deploy_log),
+
+
+    path('current_realtime_info/', client_views.current_realtime_info),
+    path('realtime_infos/', client_views.realtime_infos),
 
 
     path('charger/', charger_views.ChargerView.as_view()),
@@ -43,6 +57,7 @@ urlpatterns = [
     path('cabinet_num/', client_views.cabinet_extra_num),
 
 
+
     path('client_detail/', client_views.client_detail),
 
     path('poweroff/', client_views.client_poweroff),
@@ -51,11 +66,15 @@ urlpatterns = [
 
     path('add_sitenavi/', general_views.add_sitenavi),
 
+    path('mysql_info/', general_views.mysql_info),
+    path('set_mysql_info/', general_views.set_mysql_info),
+
     path('sitenavis/', general_views.sitenavis),
 
     path('reboot/', client_views.client_reboot),
 
     path('ping/', client_views.ping),
+    path('machine_num_by_type/', client_views.machine_num_by_type),
 
 
 ]
